@@ -31,7 +31,7 @@ if st.button("🚀 Analyze Claim"):
     with st.status("⚙️ Preparing analysis...") as status:
         st.write("🔄 Loading regulatory data...")
         data = pd.read_csv('fda_dietary_supplement_warning_letters_with_text.csv')
-        fda_letters = data['Letter Text'].tolist()[:200]
+        fda_letters = data['Letter Text'].tolist()[:100]
         urls = data['URL'].tolist()
         status.update(label="✅ Data loaded successfully.")
 
