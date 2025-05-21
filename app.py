@@ -3,7 +3,7 @@ import time
 import re
 import streamlit as st
 import pandas as pd
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from typing import List
 import faiss
 from uuid import uuid4
@@ -18,7 +18,7 @@ from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_community.vectorstores import FAISS
 
 # Load API keys
-load_dotenv()
+#load_dotenv()
 os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
 os.environ['USER_AGENT'] = 'myagent'
 
