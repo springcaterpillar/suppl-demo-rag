@@ -22,7 +22,7 @@ load_dotenv()
 os.environ['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
 os.environ['USER_AGENT'] = 'myagent'
 
-st.title("⚖️ FDA Compliance Checker")
+st.title("⚖️ Suppl - FDA Compliance Checker")
 st.write("Analyze your marketing claim for FDA regulatory risk and explore supporting evidence from official warning letters.")
 
 user_claim = st.text_area("📝 **Describe your marketing claim or statement:**", height=150)
