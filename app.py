@@ -3,7 +3,7 @@ import time
 import re
 import streamlit as st
 import pandas as pd
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 from typing import List
 import faiss
 from uuid import uuid4
