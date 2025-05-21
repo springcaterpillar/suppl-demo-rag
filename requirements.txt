@@ -1,0 +1,10 @@
+streamlit==1.32.0
+pandas==2.2.1
+python-dotenv==1.0.1
+faiss-cpu==1.7.4
+pydantic==2.6.3
+langchain==0.1.11
+langchain-openai==0.0.8
+langchain-groq==0.0.6
+langchain-community==0.0.24
+tiktoken==0.6.0 
