@@ -25,12 +25,12 @@ os.environ['USER_AGENT'] = 'myagent'
 st.title("⚖️ Suppl - FDA Compliance Checker")
 st.write("Analyze your marketing claim for FDA regulatory risk and explore supporting evidence from official warning letters.")
 
-user_claim = st.text_area("📝 **Describe your marketing claim or statement:**", height=150)
+user_claim = st.text_area("📝 **Enter your marketing claim or statement:**", height=150)
 
 if st.button("🚀 Analyze Claim"):
     with st.status("⚙️ Preparing analysis...") as status:
         st.write("🔄 Loading regulatory data...")
-        data = pd.read_csv('data/fda_dietary_supplement_warning_letters_with_text.csv')
+        data = pd.read_csv('fda_dietary_supplement_warning_letters_with_text.csv')
         fda_letters = data['Letter Text'].tolist()
         urls = data['URL'].tolist()
         status.update(label="✅ Data loaded successfully.")
@@ -58,8 +58,13 @@ if st.button("🚀 Analyze Claim"):
             binary_score: str = Field(description="Documents are relevant to the question, 'yes' or 'no'")
 
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+        system = """You are a grader assessing relevance of a retrieved document to a user question. \n
+            If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
+            It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
+            Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."""
+ 
         grade_prompt = ChatPromptTemplate.from_messages([
-            ("system", "Assess relevance of document to the question. Reply 'yes' or 'no'."),
+            ("system", system),
             ("human", "Document:\n{document}\n\nQuestion:\n{question}")
         ])
         relevance_chain = grade_prompt | llm.with_structured_output(GradeDocuments)
@@ -76,7 +81,7 @@ if st.button("🚀 Analyze Claim"):
             return "\n".join(f"<doc{i+1}>:\nContent: {doc.page_content}\n</doc{i+1}>\n" for i, doc in enumerate([d['doc'] for d in graded_docs]))
 
         answer_prompt = ChatPromptTemplate.from_messages([
-            ("system", "Provide a regulatory risk assessment based on the provided documents. Be specific and concise."),
+            ("system", "Provide a regulatory risk assessment based on the provided documents. Be specific and concise. Also rewrite the original claim to follow the FDA regulations. Add disclaimers and warnings that are required by the FDA."),
             ("human", "Documents:\n{documents}\n\nQuestion:\n{question}")
         ])
         answer_chain = answer_prompt | llm | StrOutputParser()
@@ -89,10 +94,25 @@ if st.button("🚀 Analyze Claim"):
             source: List[str]
 
         combined_parser = PydanticOutputParser(pydantic_object=HighlightWithLaws)
-        combined_prompt_template = """
-        Extract relevant document snippets **and** list all specific laws, rules, or codes mentioned in each snippet.
+        combined_prompt_template = """You are an advanced assistant for document search and retrieval. You are provided with the following:
+        1. A question.
+        2. A generated answer based on the question.
+        3. A set of documents that were referenced in generating the answer.
 
-        Documents:\n{documents}\n\nQuestion:\n{question}\n\nAnswer:\n{generation}\n\n{format_instructions}
+        Your task is to identify and extract the exact inline segments from the provided documents that directly correspond to the content used to
+        generate the given answer. The extracted segments must be verbatim snippets from the documents, ensuring a word-for-word match with the text
+        in the provided documents.
+
+        Ensure that:
+        - (Important) Each segment is an exact match to a part of the document and is fully contained within the document text.
+        - The relevance of each segment to the generated answer is clear and directly supports the answer provided.
+        - (Important) If you didn't used the specific document don't mention it.
+
+        Used documents: <docs>{documents}</docs> \n\n User question: <question>{question}</question> \n\n Generated answer: <answer>{generation}</answer>
+
+        <format_instruction>
+        {format_instructions}
+        </format_instruction>
         """
         combined_prompt = PromptTemplate(
             template=combined_prompt_template,
